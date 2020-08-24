@@ -45,4 +45,3 @@ CommandLineThatBindsArrays = j.CommandToolBuilder(
     ],
     outputs=[j.ToolOutput("out", j.Stdout())],
 )
-

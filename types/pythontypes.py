@@ -31,17 +31,17 @@ import janis_core as j
 
 workflow = j.WorkflowBuilder("typing_tests")
 
-workflow.input("my_string_input", j.String())
-workflow.input("my_string_input", str)
+workflow.input("my_string_input_1", j.String())
+workflow.input("my_string_input_2", str)
 
-workflow.input("my_optional_str_input", j.String(optional=True))
-workflow.input("my_optional_str_input", Optional[str])
+workflow.input("my_optional_str_input_1", j.String(optional=True))
+workflow.input("my_optional_str_input_2", Optional[str])
 
-workflow.input("my_list_of_strings_input", j.Array(j.String()))
-workflow.input("my_list_of_strings_input", List[str])
+workflow.input("my_list_of_strings_input_1", j.Array(j.String()))
+workflow.input("my_list_of_strings_input_2", List[str])
 
-workflow.input("my_optional_list_of_strings", j.Array(j.String(), optional=True))
-workflow.input("my_optional_list_of_strings", Optional[List[str]])
+workflow.input("my_optional_list_of_strings_1", j.Array(j.String(), optional=True))
+workflow.input("my_optional_list_of_strings_2", Optional[List[str]])
 
-workflow.input("my_list_of_optional_strings", j.Array(j.String(optional=True)))
-workflow.input("my_list_of_optional_strings", List[Optional[str]])
+workflow.input("my_list_of_optional_strings_1", j.Array(j.String(optional=True)))
+workflow.input("my_list_of_optional_strings_2", List[Optional[str]])
