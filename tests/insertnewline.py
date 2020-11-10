@@ -1,13 +1,23 @@
-import os
-import operator
-from pathlib import Path
+# Janis - Python framework for portable workflow generation
+# Copyright (C) 2020  Michael Franklin
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+import os, operator
 from typing import Dict, Optional, List, Any
 
-from janis_core import TOutput, File, Array, Int
-from janis_bioinformatics.tools.bioinformaticstoolbase import (
-    BioinformaticsPythonTool,
-)
-from janis_core import ToolMetadata, Logger, PythonTool
+import janis_core as j
 from janis_core.tool.test_classes import (
     TTestPreprocessor,
     TTestExpectedOutput,
@@ -15,32 +25,32 @@ from janis_core.tool.test_classes import (
 )
 
 
-class FileDiffOperator:
-    @classmethod
-    def new_lines(cls, output_diff, expected_new_lines):
-        new_lines = []
-        for diff_line in output_diff:
-            prefix = diff_line[0:3]
-            if prefix in ["+++", "---", "@@ "]:
-                continue
+def new_lines_diff_operator(cls, output_diff, expected_new_lines):
+    """
+    Used to process the results of the TTestPreprocessor.FileDiff,
+    and confirm the diff contains the expected_new_lines.
+    """
+    new_lines = []
+    for diff_line in output_diff:
+        prefix = diff_line[0:3]
+        if prefix in ["+++", "---", "@@ "]:
+            continue
 
-            if diff_line.startswith("+"):
-                diff_line = diff_line.strip()
-                diff_line = diff_line[1:]
+        if diff_line.startswith("+"):
+            diff_line = diff_line.strip()
+            diff_line = diff_line[1:]
 
-                new_lines.append(diff_line)
+            new_lines.append(diff_line)
 
-        return new_lines == expected_new_lines
+    return new_lines == expected_new_lines
 
 
-class InsertLineBase(BioinformaticsPythonTool):
+class InsertLineTool(j.PythonTool):
     @staticmethod
     def code_block(
-        in_file: File, line_to_insert: str, insert_after_line: int
+        in_file: j.File, line_to_insert: str, insert_after_line: int
     ) -> Dict[str, Any]:
-        from shutil import copyfile
 
-        # dst = copyfile(in_file, "./out.file")
         dst = "./output.txt"
 
         with open(in_file, "r") as fin, open(dst, "w") as fout:
@@ -53,18 +63,17 @@ class InsertLineBase(BioinformaticsPythonTool):
                     fout.write(line_to_insert + "\n")
 
         line_count = count + 1
-        misc_files = [dst, dst]
 
-        return {"out_file": dst, "line_count": line_count, "misc_files": misc_files}
+        return {"out_file": dst, "line_count": line_count, "misc_files": [dst]}
 
     def friendly_name(self) -> Optional[str]:
         return "Insert line to a text file"
 
-    def outputs(self) -> List[TOutput]:
+    def outputs(self) -> List[j.TOutput]:
         return [
-            TOutput("out_file", File),
-            TOutput("line_count", int),
-            TOutput("misc_files", Array(File)),
+            j.TOutput("out_file", j.File, doc="Single file to compare"),
+            j.TOutput("line_count", j.Int, doc="Number of lines in the file"),
+            j.TOutput("misc_files", j.Array(j.File), doc="array of output file, to show array index"),
         ]
 
     def id(self) -> str:
@@ -72,13 +81,6 @@ class InsertLineBase(BioinformaticsPythonTool):
 
     def version(self):
         return "v0.1.0"
-
-    def bind_metadata(self):
-        return ToolMetadata(
-            contributors=["Michael Franklin"],
-            dateCreated="2020-07-30",
-            institution="Melbourne Bioinformatics",
-        )
 
     def tests(self):
         return [
@@ -133,7 +135,7 @@ class InsertLineBase(BioinformaticsPythonTool):
                         file_diff_source=os.path.join(
                             self.test_data_path(), "input.txt"
                         ),
-                        operator=FileDiffOperator.new_lines,
+                        operator=new_lines_diff_operator,
                         expected_value=["my new line"],
                     ),
                     TTestExpectedOutput(
@@ -153,11 +155,7 @@ class InsertLineBase(BioinformaticsPythonTool):
             ),
         ]
 
-    # TODO: delete
-    @classmethod
-    def tool_full_path(cls):
-        return Path(__file__).absolute()
-
 
 if __name__ == "__main__":
-    InsertLineBase().translate("cwl")
+    # TODO: Add single InsertLineTool().test() method
+    pass
