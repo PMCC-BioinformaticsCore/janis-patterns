@@ -15,26 +15,29 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
+We'll use Janis to _try_ and collect a SINGLE file with the extension '.txt',
+but one won't exist. CWL will automatically coerce the empty File[0] to File? (null).
+
+However, in WDL, we have do this slightly differently:
+    File? out = if length(glob("*.txt")) > 0 then glob("*.txt")[0] else None
+
 NB: Although WDL supports optional files, some backends of Cromwell do not.
 """
 
 import janis_core as j
 
-ToolWithOptionalOutput = j.CommandToolBuilder(
-    tool="optional_output_tool",
+ToolWithDynamicGlob = j.CommandToolBuilder(
+    tool="tool_with_dynamic_glob",
     version="v0.1.0",
     container="ubuntu:latest",
-    base_command=[],
-    arguments=[j.ToolArgument("echo 1 > ", shell_quote=False)],
-    inputs=[
-        j.ToolInput(
-            "outputFilename", j.String(optional=True), default="out.csv", position=1
-        )
-    ],
+    base_command=None,
+    # write '1' to a file called 'out.csv'
+    arguments=[j.ToolArgument("echo 1 > out.csv", shell_quote=False)],
+    inputs=[j.ToolInput("extension", str)],
     outputs=[
-        j.ToolOutput("out", j.File(optional=True), selector=j.InputSelector("outputFilename"))
+        j.ToolOutput("out_csv_files", j.Array(j.File), selector=j.WildcardSelector("*" + j.InputSelector("extension"))),
     ],
 )
 
 if __name__ == "__main__":
-    ToolWithOptionalOutput().translate("wdl")
+    ToolWithDynamicGlob().translate("cwl")

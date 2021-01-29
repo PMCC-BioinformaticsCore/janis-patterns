@@ -14,27 +14,33 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+"""
+How to create an empty directory, using the value of an input
+"""
+
 import janis_core as j
-from janis_unix.tools import Echo
 
-# Declare workflow builder
-w = j.WorkflowBuilder("my_conditional_workflow")
-
-# Expose an input called 'inp' which is an optional string
-w.input("inp", j.String(optional=True), doc="Will br printed if the string has value")
-w.input("my_integer", int)
-
-my_operation = True & w.my_other_boolean_input
-
-w.step(
-    "print_if_has_value",
-    Echo(inp=w.inp),
-    # only print if the input "inp" is defined.
-    when=w.my_integer > 5
+CLT = j.CommandToolBuilder(
+    tool="create_initial_stuff",
+    base_command=["ls", "*"],
+    version="dev",
+    container="ubuntu:latest",
+    inputs=[
+        j.ToolInput(
+            "name_of_output_folder", j.String(optional=True), default="some-string"
+        )
+    ],
+    outputs=[j.ToolOutput("out_dir", j.Directory, selector="some-string")],
+    directories_to_create=[j.InputSelector("name_of_output_folder")],
+    files_to_create=[
+        (
+            j.StringFormatter(
+                "{dir}/file.txt", dir=j.InputSelector("name_of_output_folder")
+            ),
+            "contents of file",
+        )
+    ],
 )
 
-w.output("out", source=w.print_if_has_value)
-
-
 if __name__ == "__main__":
-    w.translate("wdl")
+    CLT().translate("cwl")

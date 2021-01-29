@@ -15,26 +15,22 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import janis_core as j
-from janis_unix.tools import Echo
 
-# Declare workflow builder
-w = j.WorkflowBuilder("my_conditional_workflow")
 
-# Expose an input called 'inp' which is an optional string
-w.input("inp", j.String(optional=True), doc="Will br printed if the string has value")
-w.input("my_integer", int)
-
-my_operation = True & w.my_other_boolean_input
-
-w.step(
-    "print_if_has_value",
-    Echo(inp=w.inp),
-    # only print if the input "inp" is defined.
-    when=w.my_integer > 5
+CLT = j.CommandToolBuilder(
+    tool="collecting_std_outputs",
+    base_command=["echo", "Hello, World"],
+    version="dev", container="ubuntu:latest",
+    inputs=[],
+    outputs=[
+        # stdout
+        j.ToolOutput("out_stdout_1", j.Stdout()),
+        j.ToolOutput("out_stdout_2", j.File(), selector=j.Stdout()),
+        # stderr
+        j.ToolOutput("out_stderr_1", j.Stderr()),
+        j.ToolOutput("out_stderr_2", j.File(), selector=j.Stderr()),
+    ]
 )
 
-w.output("out", source=w.print_if_has_value)
-
-
 if __name__ == "__main__":
-    w.translate("wdl")
+    CLT.translate("cwl")

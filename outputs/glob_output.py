@@ -33,9 +33,20 @@ ToolWithOptionalWildcardOutput = j.CommandToolBuilder(
     base_command=None,
     # write '1' to a file called 'out.csv'
     arguments=[j.ToolArgument("echo 1 > out.csv", shell_quote=False)],
-    inputs=[],
+    inputs=[
+        j.ToolInput("inp", j.File, localise_file=True)
+    ],
     outputs=[
+        j.ToolOutput("out_csv_files", j.Array(j.File), selector=j.WildcardSelector("*.csv")),
+        # the next two are functionally equivalent
+        j.ToolOutput("out_single_csv_file_1", j.Array(j.File), selector=j.WildcardSelector("*.csv", select_first=True)),
+        j.ToolOutput("out_single_csv_file_2", j.Array(j.File), selector=j.WildcardSelector("*.csv")[0]),
+
+        # OPTIONAL glob outputs
         # capture all files with *.txt pattern (but select the first if possible)
-        j.ToolOutput("out", j.File(optional=True), selector=j.WildcardSelector("*.txt", select_first=True))
+        j.ToolOutput("out_optional_glob", j.File(optional=True), selector=j.WildcardSelector("*.txt", select_first=True))
     ],
 )
+
+if __name__ == "__main__":
+    ToolWithOptionalWildcardOutput().translate("wdl")
